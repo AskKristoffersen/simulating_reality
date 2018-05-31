@@ -17,7 +17,7 @@ MC_Asian_Callprice <- function(s0, r, sigma, n_sim,K, time_vector, dt) {
       simulated_paths2[i, k] <- simulated_paths2[i - 1, k]*exp((r-0.5*sigma^2)*dt+sigma*sqrt(dt)*z2)
       AV_paths[i, k] <- (simulated_paths[i, k] + simulated_paths2[i, k])/2
     }
-    riemann_value[k] <- sum(simulated_paths[,k]*dt)
+    riemann_value[k] <- sum(AV_paths[,k]*dt)
     asiancallprice[k] <- exp(-r*(T))*pmax(riemann_value[k]-K,0)
   }
   
@@ -30,7 +30,8 @@ vec_asian<-Vectorize(MC_Asian_Callprice,c("s0","K","sigma","r"))
 #Tjekker asiatiske priser med europæiske
 strike<-seq(75,250,25)
 Black_Scholes_callprice(T=1,s0=200,K=75,r=0.02,sigma=0.2,q=0)
-vec_asian(s0=200,r=0.02,sigma=0.2,n_sim=10000,time_vector = seq(0,1,1/200),K=75, dt=1/200)
+vec_asian(s0=200,r=0.02,sigma=0.2,n_sim=10000,time_vector = seq(0,1,by=1/500),K=75, dt=1/200)
+
 
 #Monte Carlo simulation af asiatiske put optioner
 MC_Asian_Callprice <- function(s0, r, sigma, n_sim, time_vector,K) {
@@ -51,7 +52,7 @@ MC_Asian_Callprice <- function(s0, r, sigma, n_sim, time_vector,K) {
       simulated_paths2[i, k] <- simulated_paths2[i - 1, k]*exp((r-0.5*sigma^2)*dt+sigma*sqrt(dt)*z2)
       AV_paths[i, k] <- (simulated_paths[i, k] + simulated_paths2[i, k])/2
     }
-    riemann_value[k] <- sum(simulated_paths[,k]*dt)
+    riemann_value[k] <- sum(Av_paths[,k]*dt)
     asiancallprice[k] <- exp(-r*(T))*pmax(riemann_value[k]-K,0)
   }
   
