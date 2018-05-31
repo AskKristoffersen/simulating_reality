@@ -1,0 +1,458 @@
+---
+title: "Bachelor Assignment - Simulating Reality"
+author: "Silas Furu Friby"
+date: "17 feb 2018"
+output: bookdown::html_document2
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+$~$
+
+# Introduction {#sec:intro}
+
+$~$
+
+We consider a financial market, where the uncertainty is summarized by the filltered probability space $(\Omega, \mathcal{F}, \{\mathcal{F}_t\}_{t \geq 0}, P)$ carrying a Wiener process $(W(t))_{t \geq 0}$. Here $\Omega$ denotes the state space, $\mathcal{F}$ is a $\sigma$-algebra representing measurable events, $\{\mathcal{F}_t\}_{t \geq 0}$ denotes a filtration, which we may think of as a 
+flow of information, and at last $P$ denotes a probability measure. We may think of the probability measure $P$ as the real-world
+measure. Our only source of uncertainty originates from the Wiener process and we therefore assume that the filtration is defined by
+
+\begin{equation}
+\mathcal{F}_t = \mathcal{F}^W_t \qquad \text{for} \qquad t \geq 0 
+(\#eq:filtration)
+\end{equation}
+
+where $\mathcal{F}^W_t$ is the natural filtration of the Wiener process, i.e. 
+
+\begin{equation}
+\mathcal{F}^W_t = \sigma \{ W(s) : 0 \leq s \leq t \}
+(\#eq:sigma)
+\end{equation}
+
+All functions in this project are defined with respect to such a filtered probability space and they are
+assumed to be sufficiently well-behaved. By this we mean that they posses the continuity, differentiability,
+integrability, etc. needed in the situation at hand.
+
+We assume that the market consists of two assets: a risk-free asset with price proces $B$, and a risky asset with price proces $S$. The dynamics under $P$ are given by
+
+\begin{equation} 
+\begin{split}
+dB(t) &= r B(t) dt \\
+dS(t) &= \mu S(t) dt + \sigma S(t) dW(t)
+\end{split}
+(\#eq:p-dynamics)
+\end{equation}
+
+where $r, \mu \in \mathbb{R}$  and $\sigma \in \mathbb{R}_{+}$ are constant. We may think of the risk-free asset as a bank account with a short rate of interest $r$, and the risky asset as a stock with drift $\mu$ and volatility $\sigma$. 
+
+A stochastic process with dynamics such as $S$ is called a Geometric Brownian Motion (GBM) and it can be shown that
+
+\begin{equation}
+S(t) = S(0) \cdot e^{(\mu - \frac{1}{2}\sigma^2)t + \sigma W(t)}
+(\#eq:GBM)
+\end{equation}
+
+We assume that the market is free of arbitrage and complete, which implies the existence of a unique equivalent martingale measure, which we denote by $Q$. Furthermore, it follows that the dynamics of the stock price under $Q$ is given by
+
+\begin{equation}
+dS(t) = r S(t) dt + \sigma S(t) dW^Q(t)
+(\#eq:q-dynamics)
+\end{equation}
+
+where $W^Q$ is a Wiener process under $Q$.
+
+Consider a financial derivative with a fixed maturity $T$, which pays the amount $g(S(T))$ at maturity. It then follows from the above assumptions that the arbitrage-free price at time $t$, $\Pi(t)$, of such a financial derivative is given by
+
+\begin{equation}
+\begin{split}
+\Pi(t) &= E^Q\left[ e^{-\int_t^T \; r \; du} g(S(T)) \; \big| \; \mathcal{F}_t \right] \\
+&= e^{-r (T - t)} E^Q \left[ g(S(T)) \; \big| \; S(t) = s \right]
+\end{split}
+(\#eq:risk-neutral)
+\end{equation}
+
+where $E^Q$ denotes the expectation under the measure $Q$. Equation \@ref(eq:risk-neutral) is often called a *risk-neutral* pricing equation. 
+
+
+$~$
+
+# Model Assumptions {#sec:model-assumptions}
+
+$~$
+
+The above all sounds quite fancy. However, it does not contain much value unless we understand what it means. Hence, the main intention of the questions below are to create an intuitive understanding of the above. Furthermore, we wish to asses the meaningfullness of the assumptions in regards to the real world which we attempt to model.
+
+$~$
+
+## Questions: Model Assumptions {-}
+
+$~$
+
+2.1 Give an intuitive interpretation of the above assumptions. For example: what is the intuition behind equation \@ref(eq:filtration), \@ref(eq:sigma) and \@ref(eq:p-dynamics)?
+
+2.2 Discuss the meaningfullness of the assumptions in regards to the real world, which we attempt to model. For example: is it reasonable to assume that the stock price is positive and continuous? Furthermore, explain what we mean by an arbitrage-free and complete market. Are these assumptions reasonable? This could lead to a small discussion on reality versus tractability in mathmatical modelling.    
+
+2.3 What underlying assumptions imply the second equality sign in equation \@ref(eq:risk-neutral)?
+
+2.4 Give an intuitive interpretation of the risk-neutral pricing equation \@ref(eq:risk-neutral). Include an explanation of why arbitrage-free prices are not expectations under the real world measure $P$. Hint: Consider a simple contract with the payoff 100 dkr. or 0 dkr. (today) each outcome with a probability of $50\%$ under $P$. What is the expected payoff under $P$? How much would you pay? It depends on whether you are risk averse, risk neutral or risk loving.  
+
+2.5 In the financial world risk-neutral pricing is the dominating paradigme. Explain why risk-neutral pricing is "smart". Hint: think of market prices as an expression of a collective risk profile (in other words the measure $Q$ is determined by the market).
+
+2.6 Consider the following statements about the arbitrage-free price at time $t$ of some future cash flow
+
+(i) the arbitrage-free price at time $t$ equals the discounted cash flow
+(ii) the arbitrage-free price at time $t$ equals the discounted expected cash flow conditioned on the market information at time $t$ under $Q$
+(iii) the arbitrage-free price at time $t$ equals the expected discounted cash flow conditioned on the market information at time $t$ under $P$
+(iv) the arbitrage-free price at time $t$ equals the expected discounted cash flow conditioned on the market information at time $t$ under $Q$
+
+Under what assumptions are the above statements true/false?
+
+
+$~$
+
+# Geometric Brownian Motion {#sec:GBM}
+
+$~$
+
+The questions below aim to illustrate some of the tractable results regarding GBMs. Also, we shall attempt to fit the stock price model, given by the second equation in \@ref(eq:p-dynamics), to observed prices $\tilde{S}_{t_0}, \tilde{S}_{t_1},..., \tilde{S}_{t_m}$. We assume that the observations are equidistant, meaning that
+
+
+$$
+t_i - t_{i-1} = \Delta t
+$$
+for all $i = 1,...m$. In other words we assume that the time interval between all oberservations are equal.
+
+In order estimate the stock price model based on observation we (formally) need to specify a statistical model. By a parameterized statistical model we think of sample space $\mathcal{S}$ and a set of distributions $\mathcal{P}$, where 
+
+\begin{equation}
+\mathcal{P} = \{P_{\theta} : \theta \in \Theta \}
+\end{equation}
+
+Here the parameter set $\Theta$ is an open subset of $\mathbb{R}$. Our stock price model contains the parameters $\mu$ and $\sigma$.
+
+
+$~$
+
+## Questions: Geometric Brownian Motion {-}
+
+$~$
+
+3.1 Give a (brief) intuitive explanation of the difference between the probability model $(\Omega, \mathcal{F}, \{\mathcal{F}_t\}_{t \geq 0}, P)$ and the statistical model $(\mathcal{S}, \mathcal{P})$.
+
+3.2 How may we interpret the drift and volatility parameters? For example: how does the sign of the drift and the size of the volatility influence the evolution of the stock price over time?
+
+3.3 Derive equation \@ref(eq:GBM). Hint: Consider the stochactic process $Y(t) = \log(S(t))$ and use Itó's formula (see Lemma 1.17 in the book *Tools for Computational Finance*).
+
+3.4 Derive the stock price distribution under $P$. Furthermore, derive the distribution of the log-return $\log(S(t)/S(t-1))$ Hint: use equation \@ref(eq:GBM) and the assumption of equidistant observations.
+
+3.5 Download observed prices for the stock index S&P 100. This can for example be down by using the $\texttt{R}$ package $\texttt{quantmod}$. 
+
+3.6 Perform an analysis, based on the observed prices, which investigates whether or not a GBM model for the stock index price seems to be reasonable. 
+
+3.7 Derive closed-form expressions for the maximum likelihood estimators (MLE), $\hat{\mu}$ and $\hat{\sigma}$, of $\mu$ and $\sigma$. Hint: You may avoid some trivial math by following the points below 
+  
+  (i) Use the distribution of the log-return found in question 3.4. 
+  (ii) Use the parameter transformations $a = (\mu - \frac{1}{2}\sigma^2) \Delta t$ and $b = \sigma^2 \Delta t$. 
+  (iii) Use the known maximum likelihood estimators for the mean and variance of a Normal distribution to find the MLE $\hat{a}$ and $\hat{b}$.
+  (iv) Given $\hat{a}$ and $\hat{b}$ it is straight forward to find $\hat{\mu}$ and $\hat{\sigma}$. 
+
+3.8 Compute $\hat{\mu}$ and $\hat{\sigma}$ based on observed prices. Perform a sanity check by estimating the parameters using both numerical and analytical methods (i.e. find $\hat{\mu}$ and $\hat{\sigma}$ using the analytical solutions from question 3.7 and by optimizing the log-likelihood function numerically). Repeat the estimation process twice: (i) using all observations and (ii) using only observations after year 2010. 
+
+3.9 How do the estimates, $\hat{\mu}$ and $\hat{\sigma}$, from (i) and (ii) differ from each other? Is this what we would expect based on the observation periods?
+
+3.10 Derive closed-form expressions for the variance of $\hat{\mu}$ and $\hat{\sigma}$. Should we be worried about the variance of $\mu$ in respect to (i) the prediction of future stock prices? (ii) risk-neutral pricing of financial derivatives, which depend on the stock price? Hint: In order to find the variance of $\hat{\mu}$ and $\hat{\sigma}$ derive the covariance matrix for $(\hat{\mu}, \hat{\sigma})$ using the Delta method.
+
+
+
+$~$
+
+# Monte Carlo Simulation
+
+$~$
+
+In this section the goal is to become familiar with the idea of Monte Carlo (MC) simulation. To my knowledge there is no formal definition of MC simulation, but the generel idea can be described loosely as follows:
+
+*Assume that we wish to estimate the expectation of some stochastic variable $X$. We may do so by simulating, say $n$, i.i.d samples of $X$ and then set the MC estimator equal to the sample mean.* 
+
+In mathematical finance we are often interested in cases where $X$ is a function of the stock price, $S$. Let $\tilde{S_i} = (\tilde{S}_{1, i}, ..., \tilde{S}_{m, i})$ denote a simulated path of the stock price at time points $t_1, ..., t_m = T$, given an initial stock price $S_0$. We assume that the time points are equidistant such that $t_1 = \Delta t, t_2 = 2\Delta t,..., m\Delta t = T$. According to the above desription of MC simulation, the MC estimator $\hat{\theta}$ for the expectation of $X$ may be found by 
+
+i) Simulating $n$ independent paths $\tilde{S_1}, ..., \tilde{S_n}$. 
+ii) For each path compute $\hat{\theta}_i = X(\tilde{S_i} | S_0)$.
+iii) Finally calculate the MC estimator $\hat{\theta}$ by
+
+\begin{equation}
+\hat{\theta} = \frac{1}{n} \sum_{i = 1}^n \hat{\theta}_i
+(\#eq:MC)
+\end{equation}
+
+Below we present pseudo-code for three simulation methods (A, B and C) of a GBM. We shall examine these methods in the questions below.
+
+**Method A**
+
+$\hat{S}_0$ = 100
+
+for i $\in$ $(1, ..., n)$
+\begin{aligned}
+Z &= \mathtt{rnorm}(1, 0, 1) \\
+\Delta S &= \mu \hat{S}_{i-1} \Delta t + \hat{S}_{i-1} \sigma \sqrt{\Delta t}Z \\
+\hat{S}_i &= \hat{S}_{i-1} + \Delta S,
+\end{aligned}
+
+**Method B**
+
+$\hat{S}_0$ = 100
+
+for i $\in$ $(1, ..., n)$
+\begin{aligned}
+Z &= \mathtt{rnorm}(1, 0, 1) \\
+\hat{S}_i &= \hat{S}_{i-1} \exp((\mu - 0.5 \sigma ^ 2) \Delta t + \sigma \sqrt{\Delta t}Z),
+\end{aligned}
+
+
+**Metode C**
+
+$\hat{S}_0$ = 100
+
+for i $\in$ $(1, ..., n)$
+\begin{aligned}
+Z &= \mathtt{rnorm}(1, 0, 1) \\
+\hat{S}_i &= \hat{S}_0 \exp((\mu - 0.5 \sigma ^ 2) t_i + \sigma \sqrt{t_i} Z),
+\end{aligned}
+
+$~$
+
+## Questions: Monte Carlo Simulation  {-}
+
+$~$
+
+4.1 Explain why Monte Carlo simulation is a useful tool in mathematical finance. Hint: how do we represent arbitrage-free prices?
+
+4.2 Describe what we mean by the terms sampling error and discretization error.
+
+4.3 Argue that the following is true for the MC estimator given by equation \@ref(eq:MC) where $n$ is the number of simulated paths:
+  
+  i) the variance of the MC estimator is approximately proportional til $n^{-1}$, 
+  ii) the error of the MC estimator is approximately proportional to $n^{-1/2}$
+
+4.4 Are the methods (A and B) correct or wrong? Explain. Compare the two methods using $\Delta t = 1$, $\Delta t = \frac{1}{10}$ and $\Delta t = \frac{1}{100}$. Explain what you see. 
+
+4.5 Is method C correct or wrong? Explain.
+
+4.6 Let $S(0) = 100, \mu = 0.03, \sigma = 0.1$. Write $\mathtt{R}$ code, which simulates and plots 10 realizations of $S$ under $P$. Is it possible for a simulation path to become negative? If so is that then consistent with our model assumptions and with observed stock prices? 
+
+4.7 Show, using simulations, that the MLEs of $\mu$ and $\sigma$ from section \@ref(sec:GBM) seem to be asymptotic normally distributed. Hint: assume that $\hat{\mu}$ and $\hat{\sigma}$ are the "true" parameter values and use them in your simulation scheme.  
+
+4.8 Variance reduction techniques: why are we interested in variance reduction in respect to MC simulation? Describe the intuition behind the variance reduction methods antithetic variates and control variates.
+
+4.9 Recreate figure 3.3, 3.4, 3.5 and 3.6 in the book *Tools for Computational Finance*.
+
+$~$
+
+# Option pricing {#sec:intro}
+
+$~$
+
+In this section we focus on option pricing. In the questions below we encounter European, American and Asian options. Given an initial time, $t$, a fixed maturity, $T$, strike price, $K$, and underlying instument, $S(t)$ we may define what we mean by European, American and Asian options. 
+
+**European**
+
+A European call/put provides the owner with the right, but not the obligation to buy/sell the underlying instrument at time $T$.Hence, a European option has the following payoff function
+
+\begin{align}
+\begin{split}
+&\max(S(T) - K, 0) \qquad ( call ) \\
+&\max(K - S(T), 0) \qquad ( put ).
+\end{split}
+(\#eq:eur)
+\end{align}
+
+**American**
+
+An American call/put provides the owner with the right, but not the obligation to buy/sell the underlying instrument at any time point duing the period $[t, T]$. Given an optimal exercise time (stopping time), $\tau$, the payoff equals 
+
+\begin{align}
+\begin{split}
+&\max(S(\tau) - K, 0) \qquad ( call ) \\
+&\max(K - S(\tau), 0) \qquad ( put ).
+\end{split}
+(\#eq:amr)
+\end{align}
+
+In general it is part of the pricing method to find $\tau$.
+
+**Asian**
+
+Opposite to the European and American options, where the payoff depends on the underlying instrument at the time of exercise, the payoff of an Asian option depends on the average price of the underlying over some predefined time interval. Let the time interval be $[t, T]$ and the average be the arithmetic average, then the payoff function is given by
+
+\begin{align}
+\begin{split}
+&\max\left(\frac{1}{T - t} \int_t^T S(u) du - K, 0\right) \qquad ( call ) \\
+&\max\left(K - \frac{1}{T - t} \int_t^T S(u) du, 0\right) \qquad ( put ).
+\end{split}
+(\#eq:asian)
+\end{align}
+
+**Black-Scholes Formula**
+
+Our model assumptions, cf. section \@ref(sec:intro), imply the existence of the famous Black-Scoles formula, which provides an analytical expression of for the arbetrage-free price of a European call option, which is given by
+
+\begin{equation}
+\begin{split}
+C(t, S(t), K, r, \sigma) &= E^Q\left[ e^{-\int_t^T \; r \; du} \max(S(T) - K, 0) \; \big| \; \mathcal{F}_t \right] \\ 
+&= e^{-r (T - t)} \left( S(t) e^{(r - q) (T - t)} \phi(d_1) - K \phi(d_2)  \right)
+\end{split}
+(\#eq:bs)
+\end{equation}
+
+with 
+
+\begin{equation}
+\begin{split}
+d_1 &= \frac{1}{\sigma \sqrt{T- t}} \left( \log\left(\frac{S(t)}{K}\right) + \left( r - q + \frac{1}{2} \sigma ^ 2 \right) (T -t)   \right) \\
+d_2 &= d_1 - \sigma \sqrt{T - t}
+\end{split}
+(\#eq:bs-d)
+\end{equation}
+
+where $S(t)$, $K$, $r$, $\sigma$ and $q$ are the price of the underlying stock, the strike, the instantaeous market short rate, the stock volatility and the stock dividend.
+
+Furthermore we have the so-called *put-call parity*, which provides a connection between the price of a European call and put option. Let $P(t, S(t), K, r, \sigma)$ denote the price of a European put option, then
+
+\begin{equation}
+P(t, S(t), K, r, \sigma) = C(t, S(t), K, r, \sigma) - e^{-q(T-t)}S(t) + K e^{-r(T - t)} 
+(\#eq:put-call)
+\end{equation}
+
+$~$
+
+## Questions: Option pricing {-}
+
+$~$
+
+
+5.1 Explain why financial options are interesting. Hint: there are two main aspects: *speculation* and *hedging*.
+
+5.2 Prove the put-call parity assuming no dividends (q = 0). Hint: Construct a replicating portfolio for a European put option using the underlying stock, a bank account and a European call option.
+
+5.3 Compute the price of European call and put options using MC simulation for different values of $S_t$, $T$, $\sigma$ and $r$. This should give you an idea of the risk exposure to changes in the underlying stock price and the sensitivity to the uncertainty in model parameters. Explain the intuition behind the results. Furthermore test the validity of your MC pricing algorithm by comparing your results with prices based on the Black-Scholes formula.
+
+5.4 Use the Black-Scholes formula to price European call and put options options on the S&P 500 index. Compare the resulting prices with observed prices of European call and put options. Hint: Observed European call and put prices can be found using the symbol *^SPX*.
+
+5.5 Repeat question 5.2, but this time compare the resulting prices from the Black-Scholes formula with observed prices for American options on the S&P 500 index. Hint: Observed American call and put prices can be found using the symbol *SPY*.
+
+5.6 Compare the results from 5.2 and 5.3 for calls and puts, respectively. In doing so explain the following
+ 
+ i) The relationship between the price of a European and American call option. Consider both the case with and without dividends.
+ ii) The relationship between the price of a European and American put option. Consider both the case with and without dividends.
+ 
+ Hint: Understand the concepts *intrinsic value* and *time value* of an option.
+ 
+5.7 Use the Black-Scholes formula to compute *implied* volatilities. Hint: by implied volatility we think of the value $\bar{\sigma}$, such that $C(t, S_t, K, r, \bar{\sigma}, q)$ equals the observed option price.
+
+5.8 Plot the implied volatilities against the strike divided by the price of the underlying. How may we interpret this curve? Can you regocnize the so called volatility smile or skew?
+
+5.9 Compare the implied volatilies with the volatility estimate based on historic stock prices (the MLE of $\sigma$). In doing so consider the following
+
+  i) How may we interpret the implied volatility and the historic volatility interms of $P$ and $Q$ measures?
+  ii) Given our model assumptions what should the relationship between the implied volatility and the historic volatility be?. Do our observations confirm this relationship?
+
+
+5.10 Compute prices for Asian options using MC simulations. Compare the MC prices for Asian options with MC prices for European options. Explain the relatioship and consider in following while doing so
+
+  i) Is the volatility of the average of the underlying stock higher or lower than the volatility of the underlying stock?
+  ii) How does the relationship from i) affect the relationship between the price of an Asian and European option?
+  
+
+$~$
+
+# Asset Liability Management {#sec:alm}
+
+$~$
+
+For the questions below we follow the model framework presented in section 2 of the paper *Risk analysis and valuation of life insurance contracts: Combining actuarial and financial approaches* (ALM paper). Regarding the simplified balance sheet of the pension company presented in the ALM paper we remove the quantity $R$, hence the liability side consists only of the liabilities $L$ and the free capital $B$. The ALM paper compares different types of liability models, however we shall only consider the *Point-to-point* model, which is presented in the first part of section 2.4.
+
+For our numerical experiments we follow the setup presented in section 4 of the ALM paper. However, use your own estimates for the drift and volatility of the stock price (which was found in earlier in the assignment) and for the remaining parameters we use the values presented below.
+
+\begin{align}
+&S(0) = 100 \\
+&r(0) = 0.01 \\
+&a = 0.15 \\
+&b = 0.042\\
+&\lambda = -0.23\\
+&\sigma_r = 0.01\\
+&\rho = -0.15\\
+\end{align}
+
+
+In order to answer the questions below regarding risk management we need to define what we mean by the *solvency capital requirement* (SCR) and the *coverage ratio* (CR). Roughly speaking we define the SCR as the free capital needed today in order to secure that the risk of default for the company during the next year is less than 99.5%. In order to mathematically define the SCR we need to define the one-year loss at time $t$
+
+\begin{align}
+Loss(t) = B(t) - e^{-\int_t^{t+1} r (s) ds} B(t + 1) 
+(\#eq:loss)
+\end{align}
+
+We now define the SCR as the 99.5% quantile of the loss distribution. Hence
+
+\begin{align}
+SCR(t) = argmin_x\left(P(Loss(t) > x) \leq 1 - 0.995 \right). 
+(\#eq:scr)
+\end{align}
+
+Based on equation \@ref(eq:scr) we define the CR as
+
+\begin{align}
+CR(t) = \frac{B(t)}{SCR(t)}.
+(\#eq:cr)
+\end{align}
+
+Furthermore, we say the company is *insolvent* at time $t$ if $CR(t) < 1$. 
+
+$~$
+
+
+## Questions: Asset Liability Management {-}
+
+$~$
+
+*Interest rate model*
+
+6.1 Give a brief interpretation of the interest rate parameters $a$, $b$ and $\sigma_r$. 
+
+*Assets*
+
+6.2 Write a simulation scheme that simulates the developement of $A(t)$ in the period $[0, T]$. 
+
+6.3 Plot the expected value of $A(t)$ together with the $0.5\%$, $50\%$ and $99.5\%$ quantiles of $A(t)$ for $t \in [0, T]$. Do so for different combinations of $w_{\beta}$, $w_S$ and $w_B$. Explain why the expectation of $A$ is notably higher than the median of $A$ for "risky" portfolios. (Hint: look at how the asset distribution develops over time). 
+
+6.4 Compute the probability of $A(T) < L(T)$ for different combinations of $w_{\beta}$, $w_S$ and $w_B$. Comment on the result. You may also experiment with different parameter values for the stock price and short rate and see how changes in those affect the value of $P(A(T) < L(T))$.
+
+*Risk Management*
+
+For the following questions let $w_{\beta} = 0$, $w_S = 0.1$ and $w_B = 0.9$.
+
+6.5 Briefly describe the intuition behind equation \@ref(eq:loss), \@ref(eq:scr) and \@ref(eq:cr).
+
+6.6 Plot the $0.5\%$, $50\%$ and $99.5\%$ quantiles of $B(t)$ for $t \in [0, T]$. Furthermore, compute the solvency capital requirement, the solvency coverage ration and the probability of becoming insolvent for $t \in [0, T)$.
+
+As you may have seen by answering the above questions the company is not able to achieve coverage ratio above one given the current invenstment portfolio. For that reason the next questions look at different ways to hedge the interest rate risk, which the company is exposed to.
+
+6.7 Perform a hedge using zero-coupon bonds. How does that affect the quantities from question 6.6?
+
+6.8 Perform a hedge using zero-coupon swaps. How does that affect the quatities from question 6.6? (Hint: The slide show from ATP defines af zero-coupon swap)
+
+*Fair price of insurance contract*
+
+Another company is interested in bying our company, but this company thinks it is unclear whether the insured has been promised a guaranteed interest rate or a guaranteed benefit.
+
+6.9 Compute the fair price of the liabilities at time zero in both the case of an interest rate guarantee and in the case of a benefit guarantee. Hint: In the guaranteed interest rate case we may think of the value of the bonus option as a sum of call options.
+
+*Bonus and equity*
+
+6.10 The life insurance company takes on a risk and it is therefore entitled to some of the free capital. Compute the fair bonus rate $\eta$. Hint: See the definition of $\eta$ in the ALM paper. 
+
+
+

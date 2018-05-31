@@ -16,7 +16,7 @@ source("functions/simulate_GBM.R")
 
 ######## initialize
 
-x0 <- 200
+x0 <- 100
 mu <- 0.02
 sigma <- 0.5
 n_sim <- 10
