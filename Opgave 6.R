@@ -82,13 +82,14 @@ plot_obli <- ggplot(data_plot, aes(time, value)) +
   theme(legend.position = "none")+
   ggtitle("100 % Obligationer ")
 
-#samlet plot
+
 
 
 
 #6.3
-n<-1000
-A<-Assets(weights = c(0/10,1/10,9/10))
+#Quantiles for 90% bond 10 % stok
+list<-Assets(weights = c(0/10,1/10,9/10))
+A<-list[[1]]
 
 meanvector<-rep(NA,121)
 for (i in 1:121){
@@ -101,34 +102,63 @@ colnames(quantiles)<-c("0.5%","50%", "99.5%","Mean")
 
 
 time_vector<-seq(0,T,by=dt)
-data_plot_6.2<- data.frame("time"=time_vector, "quantiles" = quantiles)
-data_plot_6.2<- melt(data_plot_6.2,  id = c('time'))
+data_plot_6.3<- data.frame("time"=time_vector, "quantiles" = quantiles)
+data_plot_6.3<- melt(data_plot_6.3,  id = c('time'))
 
-plot_6.2 <- ggplot(data_plot_6.2, aes(time, value)) +
+plot_A_quantiles <- ggplot(data_plot_6.3, aes(time, value)) +
   geom_line(aes(colour = variable)) +
-  ggtitle("Quantile plot  ")
+  ggtitle("90% bonds og 10% aktier  ")
 
-plot_6.2+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "99.5%","Mean"))
+plot_A_quantiles+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "99.5%","Mean"))
 
-#
+# 90%aktier 10% bonds
+list<-Assets(weights = c(0/10,9/10,1/10))
+A<-list[[1]]
+
+meanvector<-rep(NA,121)
+for (i in 1:121){
+  meanvector[i]<-mean(A[i,])
+}
+
+qs <- apply(A, 1, quantile, probs=c(0.005, 0.5, 0.995))
+quantiles<-t(rbind(qs,meanvector))
+colnames(quantiles)<-c("0.5%","50%", "99.5%","Mean")
+
+
+time_vector<-seq(0,T,by=dt)
+data_plot_6.3<- data.frame("time"=time_vector, "quantiles" = quantiles)
+data_plot_6.3<- melt(data_plot_6.3,  id = c('time'))
+
+plot_A_quantiles <- ggplot(data_plot_6.3, aes(time, value)) +
+  geom_line(aes(colour = variable)) +
+  ggtitle("90% aktier 10% obligationer  ")
+
+plot_A_quantiles+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "99.5%","Mean"))
+
+#fordelingsplot 10000 simulationer 90 %akiter
 
 
 n<-10000
-A<-Assets(weights = c(0/10,1/10,9/10),n=n)
-
-#density plots
+list<-Assets(weights = c(0/10,9/10,1/10),n=n)
+A<-list[[1]]
 
 asset_dist <- data.frame(year = factor(rep(c("1","3","6","10"), each=n)), 
                          value = c(A[13,], A[37,], A[73,], A[121,]))
-ggplot(asset_dist, aes(x=value, fill=year)) + geom_density(alpha=.3)
+ggplot(asset_dist, aes(x=value, fill=year)) + geom_density(alpha=.3)+ggtitle("Fodelingsplot med 90% aktier og 10% obligationer")
 
+#90%obligationer
+
+n<-10000
+list<-Assets(weights = c(0/10,1/10,9/10),n=n)
+A<-list[[1]]
+
+asset_dist <- data.frame(year = factor(rep(c("1","3","6","10"), each=n)), 
+                         value = c(A[13,], A[37,], A[73,], A[121,]))
+ggplot(asset_dist, aes(x=value, fill=year)) + geom_density(alpha=.3)+ggtitle("Fodelingsplot med 90% obligationer og 10% aktier")
 
 # Opgave 6.4
 
 n<-1000
-list<-Assets(A0=1000,weights = c(0/10,1/10,9/10),n=n)
-A<-list[[1]]
-r<-list[[2]]
 
 premium<-1000
 q<-0.025
@@ -139,8 +169,54 @@ L<-function(t){
   return(Liability) 
 }
 
-sum(A[121,]<L(10))/n
+probality_bonds<-rep(NA,11)
 
+list<-Assets(A0=1000,weights = c(0/10,0/10,10/10),n=n)
+A<-list[[1]]
+probality_bonds[1]<-sum(A[121,]<L(10))/n
+
+list<-Assets(A0=1000,weights = c(0/10,1/10,9/10),n=n)
+A<-list[[1]]
+probality_bonds[2]<-sum(A[121,]<L(10))/n
+
+list<-Assets(A0=1000,weights = c(0/10,2/10,8/10),n=n)
+A<-list[[1]]
+probality_bonds[3]<-sum(A[121,]<L(10))/n
+
+list<-Assets(A0=1000,weights = c(0/10,3/10,7/10),n=n)
+A<-list[[1]]
+probality_bonds[4]<-sum(A[121,]<L(10))/n
+
+list<-Assets(A0=1000,weights = c(0/10,4/10,6/10),n=n)
+A<-list[[1]]
+probality_bonds[5]<-sum(A[121,]<L(10))/n
+
+list<-Assets(A0=1000,weights = c(0/10,5/10,5/10),n=n)
+A<-list[[1]]
+probality_bonds[6]<-sum(A[121,]<L(10))/n
+
+list<-Assets(A0=1000,weights = c(0/10,6/10,4/10),n=n)
+A<-list[[1]]
+probality_bonds[7]<-sum(A[121,]<L(10))/n
+
+list<-Assets(A0=1000,weights = c(0/10,7/10,3/10),n=n)
+A<-list[[1]]
+probality_bonds[8]<-sum(A[121,]<L(10))/n
+
+list<-Assets(A0=1000,weights = c(0/10,8/10,2/10),n=n)
+A<-list[[1]]
+probality_bonds[9]<-sum(A[121,]<L(10))/n
+
+list<-Assets(A0=1000,weights = c(0/10,9/10,1/10),n=n)
+A<-list[[1]]
+probality_bonds[10]<-sum(A[121,]<L(10))/n
+
+list<-Assets(A0=1000,weights = c(0/10,10/10,0/10),n=n)
+A<-list[[1]]
+probality_bonds[11]<-sum(A[121,]<L(10))/n
+
+Aktieandel<-seq(0,100,10)
+qplot(Aktieandel,probality_bonds)+ggtitle("P(A(T)<L(T))")
 #6.6
 
 VasicekZCBprice <- 
@@ -151,8 +227,12 @@ function(r0=0.01, a=0.15, b=0.042, sigma_r=0.01, T=10,t,lambda=-0.23,r){
 }
 
 L_T<-L(10)
+list<-Assets(weights = c(0,1/10,9/10), A0=1000)
+A<-list[[1]]
+r<-list[[2]]
 
 #Bonus quantile plot
+
 B<-matrix(NA,121,n)
 for (j in 0:n-1){
   for (i in 1:121){
@@ -176,7 +256,7 @@ data_plot_6.5<- melt(data_plot_6.5,  id = c('time'))
 
 Quantilplot_B <- ggplot(data_plot_6.5, aes(time, value)) +
   geom_line(aes(colour = variable)) +
-  ggtitle("Quantile plot B  ")
+  ggtitle("B fraktiler ")
 
 Quantilplot_B+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "99.5%","Mean"))
 
@@ -201,6 +281,7 @@ colnames(quantiles)<-c("0.5%","50%", "99.5%","Mean")
 
 SCR<-quantiles[,3]
 
+qplot(seq(0,9,dt), SCR)+geom_line()+ggtitle("SCR plot")
 
 CR<-matrix(NA,109,n)
 
@@ -222,7 +303,7 @@ data_plot_6.6<- melt(data_plot_6.6,  id = c('time'))
 
 Quantilplot_CR <- ggplot(data_plot_6.6, aes(time, value)) +
   geom_line(aes(colour = variable)) +
-  ggtitle("Quantile plot CR  ")
+  ggtitle("Fraktiler CR  ")
 
 Quantilplot_CR+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "99.5%","Mean"))
 
@@ -246,7 +327,7 @@ for (i in 1:109){
 
 
 
-qplot(time_vector, prob)
+qplot(time_vector, prob, ylab="Sandynligheden for insolvens")+ggtitle("Sandynligheden for insolvens til tid t")
 
 #ZCP hedge
 

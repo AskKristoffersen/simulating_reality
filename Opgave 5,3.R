@@ -10,6 +10,8 @@ dt <- 1 / 50
 n_sim<-10000
 n_paths<-10
 
+MC_Callprice_method2(1000,0.06,0.3,5000,10,1000,1,1/50)
+
 #Gør så funktionerne kan tage vektorer:
 vec_MC_call<-Vectorize(MC_Callprice_method2,vectorize.args = c("T","s0","sigma","r"))
 vec_MC_put<-Vectorize(MC_Putprice_method2,vectorize.args = c("T","s0","sigma","r"))
