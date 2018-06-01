@@ -1,6 +1,7 @@
 library(reshape2)
 library(ggplot2)
 require(gridExtra)
+library(pracma)
 # simulerer assets
 
 #Model parameter
@@ -168,6 +169,7 @@ L<-function(t){
   Liability<-premium*(1+q)^t
   return(Liability) 
 }
+L_T<-L(10)
 
 probality_bonds<-rep(NA,11)
 
@@ -226,7 +228,9 @@ function(r0=0.01, a=0.15, b=0.042, sigma_r=0.01, T=10,t,lambda=-0.23,r){
   return(exp(a.vas-b.vas*r))
 }
 
-L_T<-L(10)
+
+
+
 list<-Assets(weights = c(0,1/10,9/10), A0=1000)
 A<-list[[1]]
 r<-list[[2]]
@@ -363,7 +367,6 @@ for (j in 1:n){
     B_ZCB[i,j]<-max(Assets_values[i,j]-VasicekZCBprice(t=i/12,r=rZCB[i,j])*L_T,0)
   }
 }
-B_ZCB[,4]
 
 meanvector_B_ZCB<-rep(NA,121)
 for(i in 1:121){
@@ -381,7 +384,7 @@ data_plot_ZCB<- melt(data_plot_ZCB,  id = c('time'))
 
 Quantilplot_B_ZCB <- ggplot(data_plot_ZCB, aes(time, value)) +
   geom_line(aes(colour = variable)) +
-  ggtitle("Quantile plot B_ZCB  ")
+  ggtitle("Fraktilplot nulkupon obligation hedge  ")
 
 Quantilplot_B_ZCB+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "99.5%","Mean"))
 
@@ -393,7 +396,7 @@ for (j in 1:n){
     Loss_ZCB[i,j]<-B_ZCB[i,j]-exp(-mean((rZCB[i:(i+11),])))*B_ZCB[i+12,j]
   }
 }
-Loss_ZCB[,1]
+
 
 meanvector_Loss_ZCB<-rep(NA,109)
 for (i in 1:109){
@@ -407,7 +410,7 @@ colnames(quantiles)<-c("0.5%","50%", "99.5%","Mean")
 
 SCR_ZCB<-quantiles[,3]
 
-
+qplot(seq(0,9,dt), SCR_ZCB)+geom_line()+ggtitle("SCR plot nulkupon hedge")
 
 CR_ZCB<-matrix(NA,109,n)
 
@@ -429,7 +432,7 @@ data_plot_CR_ZCB<- melt(data_plot_CR_ZCB,  id = c('time'))
 
 Quantilplot_CR_ZCB <- ggplot(data_plot_CR_ZCB, aes(time, value)) +
   geom_line(aes(colour = variable)) +
-  ggtitle("Quantile plot CR ZCB  ")
+  ggtitle("Fraktilplot nulkupon hedge CR ")
 
 Quantilplot_CR_ZCB+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "99.5%","Mean"))
 
@@ -575,3 +578,61 @@ for (i in 1:109){
 
 
 qplot(time_vector, prob_swap)
+
+#6.9
+
+Assets_underQ<-function(dt=1/12,s0=100,r0=0.01,A0=1000,a=0.15,b=0.042,lambda=-0.23,sigma_r=0.01,rho=-0.15,mu=0.09,sigma=0.2, weights,n=1000){
+  B <- (1 / a) * (1 - exp(-a * 1:10))
+  xij <- rep(1/10,10)
+  
+  A <- matrix(NA,m+1,n)  
+  A[1,] <- A0
+  
+  r <- matrix(0,m+1,n)  
+  r[1,] <- r0
+  
+  for(j in 1:n){
+    for(i in 2:121){
+      dw1<-rnorm(n=121,mean=0,sd=1)
+      dw3<-rho*dw1+sqrt(1-rho^2)*rnorm(n=121,mean=0,sd=1)
+      dr <- a*(b-(lambda*sigma_r)/a-r[i-1,j])*dt + sigma_r*sqrt(dt)*dw1[i-1]
+      r[i,j] <- r[i-1,j] + dr
+      dA <-A[i-1,j]* (weights[1] *r[i-1,j]  * dt + weights[2] *(r[i-1,j]*dt+sigma*sqrt(dt)*dw3[i-1]) + 
+                        sum(xij * weights[3] * (r[i-1,j] * dt - sigma_r * B *sqrt(dt)* dw1[i-1])))
+      A[i,j] <- A[i-1,j] + dA
+    }
+  } 
+  return(list(A,r))
+}
+
+list<-Assets_underQ(weights = c(0,1/10,9/10))
+AQ<-list[[1]]
+bonusoption<-rep(NA,1000)
+for (i in 1:1000){
+  bonusoption[i]<-max(AQ[121,i]-L_T,0)
+}
+ydelse<-VasicekZCBprice(t=1,r=r0)*mean(bonusoption)
+
+
+L<-function(t){
+  Liability<-premium*(1+q)^t
+  return(Liability) 
+}
+
+bonusoptions2<-matrix(NA,1000,10)
+for (k in 1:1000){
+  for (i in 1:10){
+    bonusoptions2[k,i]<-max(AQ[i*12,k]-L(i),0)
+  }
+}
+meanbonus<-rep(NA,10)
+for (i in 1:10){
+  meanbonus[i]<-mean(bonusoptions2[,i])
+}
+diskon<-VasicekZCBprice(t=1,r=r0)*meanbonus
+sum(diskon)
+# finder eta
+
+bisect(function(eta){return(VasicekZCBprice(t=0,r=r0)*(L(10)+eta*(mean(bonusoption)))-1000)},0,1)
+
+  

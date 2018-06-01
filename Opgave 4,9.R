@@ -18,6 +18,7 @@ endvalue<-matrix(NA,nrow = 10000,ncol = 10)
 option<-matrix(NA,nrow = 10000,ncol = 10)
 
 for (i in 1:10){
+  set.seed(i)
   simulated_paths<-simulate_GBM(x0=s0,mu=r,sigma=sigma,n_sim=n_sim,time_vector = time_vector)
   endvalue[,i]<-simulated_paths[51,]
   option[,i]<-pmax(0,K-endvalue[,i])
@@ -42,8 +43,11 @@ AV_option_3.4<-matrix(NA,nrow = 10000,ncol = 10)
 antithetic_paths<-matrix(NA,10000,10)
 
 for (i in 1:10){
+  set.seed(i)
   AV_paths<-simulate_GBM_AV_euler(x0=s0,mu=r,sigma=sigma,n_sim=n_sim,time_vector = time_vector)
-  AV_option_3.4[,i]<-pmax(0,K-AV_paths[51,])
+  sim1<-AV_paths[[1]]
+  sim2<-AV_paths[[2]]
+  AV_option_3.4[,i]<-1/2*(pmax(0,K-sim1[51,]) + pmax(0,K-sim2[51,]))
   for (b in 1:n_sim){
     antithetic_paths[b,i]<-exp(-r)*mean(AV_option_3.4[1:b,i])
   }
@@ -65,6 +69,7 @@ endvalue_3.5<-matrix(NA,nrow = 10000,ncol = 10)
 option_3.5<-matrix(NA,nrow = 10000,ncol = 10)
 
 for (i in 1:10){
+  set.seed(i)
   simulated_paths_3.5<-Method2(x0=s0,mu=r,sigma=sigma,n_sim=n_sim,time_vector = time_vector)
   endvalue_3.5[,i]<-simulated_paths_3.5[51,]
   option_3.5[,i]<-pmax(0,K-endvalue_3.5[,i])
@@ -88,8 +93,11 @@ AV_option_3.6<-matrix(NA,nrow = 10000,ncol = 10)
 antithetic_paths_3.6<-matrix(NA,10000,10)
 
 for (i in 1:10){
-  AV_paths_3.6<-Method2_AV(x0=s0,mu=r,sigma=sigma,n_sim=n_sim,time_vector = time_vector)
-  AV_option_3.6[,i]<-pmax(0,K-AV_paths_3.6[51,])
+  set.seed(i)
+  AV_paths_3.6<-Method2_AV(x0=s0,mu=r,sigma=sigma,n_sim=n_sim,time_vector = time_vector,dt=dt)
+  AV_paths1<-AV_paths_3.6[[1]]
+  AV_paths2<-AV_paths_3.6[[2]]
+  AV_option_3.6[,i]<-1/2*(pmax(0,K-AV_paths1[51,])+pmax(0,K-AV_paths2[51,]))
   for (b in 1:n_sim){
     antithetic_paths_3.6[b,i]<-exp(-r)*mean(AV_option_3.6[1:b,i])
   }
