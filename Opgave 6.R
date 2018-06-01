@@ -354,7 +354,7 @@ plot
 Assets_values<-matrix(NA,121,n)
 for (k in 1:n){
   for (i in 1:121){
-    Assets_values[i,k]<-Assets_invest[i,k]+VasicekZCBprice(t=i/12,r=rZCB[i,k])*L_T 
+    Assets_values[i,k]<-Assets_invest[i,k]+VasicekZCBprice(t=i-1/12,r=rZCB[i,k])*L_T 
   }
 }
 
@@ -364,7 +364,7 @@ for (k in 1:n){
 B_ZCB<-matrix(NA,121,n)
 for (j in 1:n){
   for (i in 1:121){
-    B_ZCB[i,j]<-max(Assets_values[i,j]-VasicekZCBprice(t=i/12,r=rZCB[i,j])*L_T,0)
+    B_ZCB[i,j]<-max(Assets_values[i,j]-VasicekZCBprice(t=i-1/12,r=rZCB[i,j])*L_T,0)
   }
 }
 
@@ -471,7 +471,7 @@ swap_invest<-Assets_swap()
 r_swap<-swap_invest[[2]]
 Aswap_invest<-swap_invest[[1]]
 betaling<-swap_invest[[3]]
-Aswap_invest[,1]
+
 
 
 Nyassets_swap<-matrix(NA,121,n)
@@ -488,8 +488,6 @@ for (j in 1:n){
     B_swap[i,j]<-max(Nyassets_swap[i,j]-(VasicekZCBprice(t=i/12,r=r_swap[i,j])*L_T+VasicekZCBprice(t=1/12,r=r0)*L_T),0)
   }
 }
-Nyassets_swap[,1]
-B_swap[,1]
 
 meanvector_B_swap<-rep(NA,121)
 for(i in 1:121){
@@ -517,7 +515,7 @@ Quantilplot_B_swap+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "
 Loss_swap<-matrix(NA,109,n)
 for (j in 1:n){
   for (i in 1:109){
-    Loss_swap[i,j]<-B_swap[i,j]-exp(-mean((r[i:(i+11),])))*B_swap[i+12,j]
+    Loss_swap[i,j]<-B_swap[i,j]-exp(-mean((r_swap[i:(i+11),])))*B_swap[i+12,j]
   }
 }
 
@@ -533,7 +531,7 @@ colnames(quantiles)<-c("0.5%","50%", "99.5%","Mean")
 
 SCR_swap<-quantiles[,3]
 
-
+qplot(seq(0,9,dt), SCR_swap)+geom_line()+ggtitle("SCR plot nulkupon swap hedge")
 
 CR_swap<-matrix(NA,109,n)
 
@@ -577,7 +575,7 @@ for (i in 1:109){
 }
 
 
-qplot(time_vector, prob_swap)
+qplot(time_vector, prob_swap, ylab ="sandsynlighed for insolvens")+ggtitle("Sandsynlighedsplot")
 
 #6.9
 

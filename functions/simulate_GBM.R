@@ -45,10 +45,9 @@ simulate_GBM_AV_euler <- function(x0, mu, sigma, n_sim, time_vector) {
       simulated_paths[i, k] <- simulated_paths[i - 1, k] + dx1
       dx2 <- mu * simulated_paths2[i - 1, k] * dt + simulated_paths2[i - 1, k] * sigma * sqrt(dt) * z2
       simulated_paths2[i, k] <- simulated_paths2[i - 1, k] + dx2
-      AV_paths[i, k] <- (simulated_paths[i, k] + simulated_paths2[i, k])/2
     }
   }
   
-  return(AV_paths)
+  return(list(simulated_paths,simulated_paths2))
   
 }

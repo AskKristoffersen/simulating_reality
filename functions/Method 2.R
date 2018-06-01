@@ -15,7 +15,7 @@ Method2 <- function(x0, mu, sigma, n_sim, time_vector) {
   
 }
 
-Method2_AV <- function(x0, mu, sigma, n_sim, time_vector) {
+Method2_AV <- function(x0, mu, sigma, n_sim, time_vector,dt) {
   
   n_time  <- length(time_vector) # number of time points
   
@@ -29,10 +29,9 @@ Method2_AV <- function(x0, mu, sigma, n_sim, time_vector) {
       z2 <- -z1
       simulated_paths[i, k] <- simulated_paths[i - 1, k]*exp((mu-0.5*sigma^2)*dt+sigma*sqrt(dt)*z1)
       simulated_paths2[i, k] <- simulated_paths2[i - 1, k]*exp((mu-0.5*sigma^2)*dt+sigma*sqrt(dt)*z2)
-      AV_paths[i, k] <- (simulated_paths[i, k] + simulated_paths2[i, k])/2
     }
   }
   
-  return(AV_paths)
+  return(list(simulated_paths,simulated_paths2))
   
 }
