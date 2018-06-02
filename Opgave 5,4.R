@@ -1,7 +1,7 @@
 library(quantmod)
 library(ggplot2)
 require(gridExtra)
-
+source("functions/funktioner.R")
 #Vi finder Log return, muhat og sigmahat for data fra 2018
 getSymbols("^GSPC",src="yahoo",from="2017-12-19")
 SP500_2018<-GSPC$GSPC.Close
@@ -9,11 +9,12 @@ logreturn2018<-c(NA,length(SP500_2018))
 for(i in 2:length(SP500_2018)){
   logreturn2018[i-1]<-log(SP500_2018[[i]]/SP500_2018[[i-1]])
 }
-
 T2018<-length(logreturn2018)/252
-muhat2018<-log(SP500_2018[[nrow(SP500_2018)]]/SP500_2018[[1]])/T2018+(1/T2018*sum(logreturn2018^2))/2
 
-sigmahat2018<-sqrt(1/T2018*sum(logreturn2018^2))
+ahat<-1/n*log(SP500_2018[[length(SP500_2018)]]/SP500_2018[[1]])
+bhat<-1/n*sum((logreturn2018-ahat)^2)*dt
+sigmahat2018<-sqrt(bhat)/dt
+muhat2018<-1/2*sigmahat2018^2+ahat/dt
 
 #vi finder priserne for optionerne hvis man købte dem i dag
 option<-getOptionChain("^SPX",src="yahoo", NULL)
@@ -36,7 +37,7 @@ callprices_juni19<-calls_juni19$Last
 strike_juni15<-calls_juni15$Strike
 strike_dec19<-calls_dec19$Strike
 strike_juli31<-calls_juli31$Strike
-strike_juni19<-calls_sep28$Strike
+strike_juni19<-calls_juni19$Strike
 
 
 #Black scholes price of S&P 500 index
@@ -77,13 +78,13 @@ strike_putdec19<-option$dec.20.2019$puts$Strike
 
 #priser
 BSput_juni15<-Black_Scholes_putprices(
-  T=T2018,SP500_2018[[length(SP500_2018)]],strike_putjuni15,muhat2018,sigmahat2018,q=0)
+  T=0.1,SP500_2018[[length(SP500_2018)]],strike_putjuni15,muhat2018,sigmahat2018,q=0)
 BSput_juli31<-Black_Scholes_putprices(
-  T=T2018,SP500_2018[[length(SP500_2018)]],strike_putjuli31,muhat2018,sigmahat2018,q=0)
+  T=0.2,SP500_2018[[length(SP500_2018)]],strike_putjuli31,muhat2018,sigmahat2018,q=0)
 BSput_juni19<-Black_Scholes_putprices(
-  T=T2018,SP500_2018[[length(SP500_2018)]],strike_putjuni19,muhat2018,sigmahat2018,q=0)
+  T=1,SP500_2018[[length(SP500_2018)]],strike_putjuni19,muhat2018,sigmahat2018,q=0)
 BSput_dec19<-Black_Scholes_putprices(
-  T=T2018,SP500_2018[[length(SP500_2018)]],strike_putdec19,muhat2018,sigmahat2018,q=0)
+  T=2.5,SP500_2018[[length(SP500_2018)]],strike_putdec19,muhat2018,sigmahat2018,q=0)
 
 
 #plots
@@ -106,9 +107,11 @@ for(i in 2:length(onemonth)){
 }
 
 T_onemonth<-length(logreturn_onemonth)/252
-muhat_onemonth<-log(onemonth[[nrow(onemonth)]]/onemonth[[1]])/T_onemonth+(1/T2018*sum(logreturn_onemonth^2))/2
 
-sigmahat_onemonth<-sqrt(1/T_onemonth*sum(logreturn_onemonth^2))
+ahat<-1/n*log(onemonth[[length(onemonth)]]/onemonth[[1]])
+bhat<-1/n*sum((logreturn_onemonth-ahat)^2)*dt
+sigmahat_onemonth<-sqrt(bhat)/dt
+muhat_onemonth<-1/2*sigmahat_onemonth^2+ahat/dt
 
 #pris
 Onemonth_prices<-Black_Scholes_callprice(
@@ -132,9 +135,11 @@ for(i in 2:length(from2010)){
 }
 
 T_2010<-length(logreturn_2010)/252
-muhat_2010<-log(from2010[[nrow(from2010)]]/from2010[[1]])/T_2010+(1/T2018*sum(logreturn_2010^2))/2
 
-sigmahat_2010<-sqrt(1/T_2010*sum(logreturn_2010^2))
+ahat<-1/n*log(from2010[[length(from2010)]]/from2010[[1]])
+bhat<-1/n*sum((logreturn_2010-ahat)^2)*dt
+sigmahat_2010<-sqrt(bhat)/dt
+muhat_2010<-1/2*sigmahat_2010^2+ahat/dt
 
 prices2010<-Black_Scholes_callprice(
   T=T_2010,from2010[[length(from2010)]],strike_juni15,muhat_2010,sigmahat_2010,q=0)
@@ -156,10 +161,10 @@ for(i in 2:length(oneyear)){
 }
 
 T_oneyear<-length(logreturn_oneyear)/252
-muhat_oneyear<-log(oneyear[[nrow(oneyear)]]/oneyear[[1]])/T_oneyear+(1/T2018*sum(logreturn_oneyear^2))/2
-
-sigmahat_oneyear<-sqrt(1/T_oneyear*sum(logreturn_oneyear^2))
-
+ahat<-1/n*log(oneyear[[length(oneyear)]]/oneyear[[1]])
+bhat<-1/n*sum((logreturn_oneyear-ahat)^2)*dt
+sigmahat_oneyear<-sqrt(bhat)/dt
+muhat_oneyear<-1/2*sigmahat_oneyear^2+ahat/dt
 #pris
 oneyear_prices<-Black_Scholes_callprice(
   T=T_oneyear,oneyear[[length(oneyear)]],strike_juni15,muhat_oneyear,sigmahat_oneyear,q=0)

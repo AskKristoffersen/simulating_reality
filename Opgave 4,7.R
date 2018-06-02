@@ -2,7 +2,7 @@ library(ggplot2)
 library(quantmod)
 
 source("functions/funktioner.R")
-getSymbols("^OEX",src="yahoo",from="2010-06-01")
+getSymbols("^OEX",src="yahoo",from="2010-01-04")
 OEXclose<-OEX$OEX.Close
 length(OEXclose)/8
 
@@ -17,37 +17,40 @@ dt<-1/200
 #finder true muhat
 n<-length(logreturn)
 T<-n/250
-ahat<-1/n*sum(logreturn)
+ahat<-1/n*log(OEXclose[[n]]/OEXclose[[1]])
 bhat<-1/n*sum((logreturn-ahat)^2)*dt
-sigmahat<-sqrt(bhat*dt)
+sigmahat<-sqrt(bhat)/dt
 muhat<-1/2*sigmahat^2+ahat/dt
 # finder true sigma
 
 
 #simulerer 10000 nye datasæt
 n<- 10000
-sigma<-c(NA,n)
-mu<-c(NA,n)
-data<-Method2(mu=muhat,sigma=sigmahat,x0=OEXclose[[1]],n_sim=n,time_vector=seq(0,1,by=1/251))
 
-logreturn_ny<-matrix(NA,252,n)
-for (k in 1:10000){
-  for (i in 2:252){
+data<-Method2(mu=muhat,sigma=sigmahat,x0=OEXclose[[1]],n_sim=n,time_vector=seq(0,8,by=dt))
+
+logreturn_ny<-matrix(NA,length(data[,1]),n)
+for (k in 1:n){
+  for (i in 2:length(data[,1])){
     logreturn_ny[i-1,k]<-log(data[i,k]/data[i-1,k])
-    logreturn_ny[252,k]<-log(data[252,k]/data[251,k])
+    logreturn_ny[length(data[,1]),k]<-log(data[length(data[,1]),k]/data[length(data[,1])-1,k])
   }
   
 }
+sigma<-rep(NA,n)
+mu<-rep(NA,n)
+a<-rep(NA,n)
+b<-rep(NA,n)
 
-logreturn_ny[2009,2]
-dim(logreturn_ny)
+
 for (i in 1:n){
-  
-  mu[i]<-log(data[252,i]/data[1,i])/(n*dt)+(1/(n*dt)*sum(logreturn_ny[,i]^2))/2
-  sigma[i]<-sqrt(1/(n*dt)*sum(logreturn_ny[,i]^2))
+  a[i]<-1/length(data[,1])*log(data[1601,i]/data[1,i])
+  b[i]<-1/length(data[,1])*sum((logreturn_ny[,i]-a[i])^2)*dt
+  sigma[i]<-sqrt(b[i])/dt
+  mu[i]<-1/2*sigma[i]^2+a[i]/dt
 }
 
-log(data[51,1]/data[1,1])/T+1/(T*2)*sum(logreturn_ny[,1]^2)
+
 #histogram af sigma
 hist(sigma)
 qplot(sigma, type="hist", fill=I("blue"))+geom_density()+geom_vline(xintercept=sigmahat,col="green", size=1)
@@ -79,12 +82,20 @@ qqline(mu)
 mean(mu)
 mu
 
-
-h<-hist(mu, breaks=50, xlab="Sigma", ylab = "Frekvens", 
+h<-hist(mu, breaks=45, xlab="mu", ylab = "Frekvens", 
         main="Histogram med tæthed") 
-xfit<-seq(min(mu,na.rm=T),max(mu,na.rm=T),length=40) 
-yfit<-dnorm(xfit,mean=mean(mu,na.rm=T),sd=sd(mu,na.rm=T)) 
-yfit <- yfit*diff(h$mids[1:2])*length(mu==NaN) 
+xfit<-seq(min(mu),max(mu),length=40) 
+yfit<-dnorm(xfit,mean=mean(mu),sd=sd(mu)) 
+yfit <- yfit*diff(h$mids[1:2])*length(mu) 
 lines(xfit, yfit, col="blue", lwd=2)
 abline(v=muhat, lwd=3)
 
+# finder varians op mod rigtig varians
+
+truevar_mu<-1/length(data[,1])*(sigmahat^2/dt+sigmahat^4/2)
+truevar_mu
+var(mu)
+
+truevar_sigma<-1/length(data[,1])*sigmahat^2/2
+truevar_sigma
+var(sigma)

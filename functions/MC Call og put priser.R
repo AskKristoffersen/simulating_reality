@@ -1,6 +1,6 @@
 
 #Montecarlo put pricing med metode 1 uden varians reduktion
-MC_putprice_method2<-function(s0,r,sigma,n_sim,K,T,dt){
+MC_Putprice_method2<-function(s0,r,sigma,n_sim,K,T,dt){
   
   time_vector <- seq(0, T, by = dt)
   

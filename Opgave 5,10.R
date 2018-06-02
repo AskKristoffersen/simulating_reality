@@ -1,8 +1,8 @@
 #Monte Carlo simulation af asiatiske Call optioner
-MC_Asian_call <- function(S0, K, sigma, r, n_sim, T) {
+MC_Asian_Callprice <- function(s0, K, sigma, r, n_sim, T) {
   dt = 1/1000
   simulated_paths <- simulated_paths2 <- AV_paths <- matrix(NA, 1000, n_sim)
-  simulated_paths[1,] <- simulated_paths2[1,] <- AV_paths[1,] <- S0
+  simulated_paths[1,] <- simulated_paths2[1,] <- AV_paths[1,] <- s0
   riemann_value <- c(NA, n_sim)
   asiancallprice <- c(NA, n_sim)
   
@@ -20,20 +20,19 @@ MC_Asian_call <- function(S0, K, sigma, r, n_sim, T) {
   return(price)
 }
 
-simulate_asian_call(200,20,0.2,0.02,1000,1)
 vec_asian<-Vectorize(MC_Asian_Callprice,c("s0","K","sigma","r"))
 
 #Tjekker asiatiske priser med europæiske
 strike<-seq(75,250,25)
-Black_Scholes_callprice(T=1,s0=100,K=100,r=0.02,sigma=0.2,q=0)
-MC_Asian_Callprice(s0=200,r=0.02,sigma=0.2,n_sim=1000,time_vector = seq(0,1,by=1/1000),K=20, dt=1/1000)
+Black_Scholes_callprice(T=1,s0=175,K=strike,r=0.02,sigma=0.2,q=0)
+vec_asian(s0=175,r=0.02,sigma=0.2,n_sim=1000,T=1,K=strike)
 
 
 #Monte Carlo simulation af asiatiske put optioner
-MC_Asian_put<- function(S0, K, sigma, r, n_sim, T) {
+MC_Asian_put<- function(s0, K, sigma, r, n_sim, T) {
   dt = 1/1000
   simulated_paths <- simulated_paths2 <- AV_paths <- matrix(NA, 1000, n_sim)
-  simulated_paths[1,] <- simulated_paths2[1,] <- AV_paths[1,] <- S0
+  simulated_paths[1,] <- simulated_paths2[1,] <- AV_paths[1,] <- s0
   riemann_value <- c(NA, n_sim)
   asiancallprice <- c(NA, n_sim)
   
@@ -50,3 +49,8 @@ MC_Asian_put<- function(S0, K, sigma, r, n_sim, T) {
   price <- mean(asiancallprice)
   return(price)
 }
+vec_asian_put<-Vectorize(MC_Asian_put,c("s0","K","sigma","r"))
+
+strike<-seq(75,250,25)
+Black_Scholes_putprices(s0=100,r=0.02,sigma=0.2,T=1,K=strike,q=0)
+vec_asian_put(s0=100,r=0.02,sigma=0.2,n_sim=1000,T=1,K=strike)

@@ -20,16 +20,11 @@ for (i in 2:length(OEXclose)){
 n<-length(logreturn)
 T<-n/250
 
-#Finder muhat
-muhat<-log(OEXclose[[length(OEXclose)]]/OEXclose[[1]])/T+(1/T*sum(logreturn^2))/2
-muhat
-
-mean(logreturn)
-
-#finder Sigmahat
-sigmahat<-sqrt(1/11*sum(logreturn^2))
-sigmahat
-
+#Finder muhat og sigmahat
+ahat<-1/n*log(OEXclose[[n]]/OEXclose[[1]])
+bhat<-1/n*sum((logreturn-ahat)^2)*dt
+sigmahat<-sqrt(bhat)/dt
+muhat<-1/2*sigmahat^2+ahat/dt
 #optimerer med loglikelihood
 si<-c(NA,length(OEXclose)-1)
 si1<-c(NA,length(OEXclose)-1)
@@ -57,6 +52,13 @@ opti<-optim(c(0.1,0.5),loglike)
 muhat_loglike<-opti$par[1]
 sigmahat_loglike<-opti$par[2]
 
+muhat
+muhat_loglike
+
+sigmahat
+sigmahat_loglike
+
+
 #Fra 2010-2018
 getSymbols("^OEX",src="yahoo", from="2010-01-04")
 
@@ -74,14 +76,11 @@ for (i in 2:length(OEXclose)){
 n<-length(logreturn_2010)
 T<-n/250
 
-#Finder muhat for 2010 og frem
-muhat_2010<-log(OEXclose[[length(OEXclose)]]/OEXclose[[1]])/T+(1/T*sum(logreturn_2010^2))/2
-muhat_2010
-
-
-#finder sigmahat for 2010 og frem
-sigmahat_2010<-sqrt(1/11*sum(logreturn_2010^2))
-sigmahat_2010
+#Finder muhat og sigmahat for 2010 og frem
+ahat_2010<-1/n*log(OEXclose[[n]]/OEXclose[[1]])
+bhat_2010<-1/n*sum((logreturn_2010-ahat_2010)^2)*dt
+sigmahat_2010<-sqrt(bhat_2010)/dt
+muhat_2010<-1/2*sigmahat_2010^2+ahat_2010/dt
 
 #optimerer med loglikelihood
 si<-c(NA,length(OEXclose)-1)
@@ -110,8 +109,13 @@ opti_2010<-optim(c(0.1,0.5),loglike)
 muhat_loglike_2010<-opti_2010$par[1]
 sigmahat_loglike_2010<-opti_2010$par[2]
 
+muhat_2010
+muhat_loglike_2010
 
-#Forskel på dem alle
+sigmahat_2010
+sigmahat_loglike_2010
+
+#Forskel p? dem alle
 
 muhat
 muhat_loglike

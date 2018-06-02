@@ -12,8 +12,8 @@ b<- 0.042
 lambda<- -0.23
 sigma_r<- 0.01
 rho<- -0.15
-mu<-0.109
-sigma<-0.127
+mu<-0.107
+sigma<-0.145
 A0<-1000
 
 n <- 10    # MC simulation trials
@@ -607,9 +607,9 @@ list<-Assets_underQ(weights = c(0,1/10,9/10))
 AQ<-list[[1]]
 bonusoption<-rep(NA,1000)
 for (i in 1:1000){
-  bonusoption[i]<-max(AQ[121,i]-L_T,0)
+  bonusoption[i]<-max(AQ[121,i]-L(10),0)
 }
-ydelse<-VasicekZCBprice(t=1,r=r0)*mean(bonusoption)
+ydelse<-VasicekZCBprice(t=0,r=r0)*mean(bonusoption)
 
 
 L<-function(t){

@@ -1,38 +1,7 @@
 library(quantmod)
 library(ggplot2)
 require(gridExtra)
-# Vi finder Log return, muhat og sigmahat for data fra 2007
-getSymbols("SPY",src="yahoo")
-SP500close_american<-SPY$SPY.Close
-
-logreturn500_american<-c(NA,length(SP500close_american))
-for(i in 2:length(SP500close_american)){
-  logreturn500_american[i-1]<-log(SP500close_american[[i]]/SP500close_american[[i-1]])
-}
-oneyear<-nrow(SPY)/11
-
-T<-length(logreturn500_american)/252
-muhat2007_2018<-log(SP500close_american[[nrow(SP500close_american)]]/SP500close_american[[1]])/T+(1/T*sum(logreturn500_american^2))/2
-
-
-sigmahat2007_2018<-sqrt(1/T*sum(logreturn500_american^2))
-
-
-#Vi finder Log return, muhat og sigmahat for data fra 2010
-getSymbols("SPY",src="yahoo",from="2010-01-04")
-SP500_2010_close_american<-SPY$SPY.Close
-logreturn2010_american<-c(NA,length(SP500_2010_close_american))
-for(i in 2:length(SP500_2010_close_american)){
-  logreturn2010_american[i-1]<-log(SP500_2010_close_american[[i]]/SP500_2010_close_american[[i-1]])
-}
-
-T2010<-length(logreturn2010_american)/252
-
-muhat2010_2018<-log(SP500_2010_close_american[[nrow(SP500_2010_close_american)]]/SP500_2010_close_american[[1]])/T2010+(1/2010*sum(logreturn2010_american^2))/2
-
-sigmahat2010_2018<-sqrt(1/T2010*sum(logreturn2010_american^2))
-
-
+source("functions/funktioner.R")
 #Vi finder Log return, muhat og sigmahat for data fra 2018
 getSymbols("SPY",src="yahoo",from="2017-10-10")
 SP500_2018_american<-SPY$SPY.Close
@@ -42,9 +11,11 @@ for(i in 2:length(SP500_2018_american)){
 }
 
 T2018<-length(logreturn2018_american)/252
-muhat2018<-log(SP500_2018_american[[nrow(SP500_2018_american)]]/SP500_2018_american[[1]])/T2018+(1/T2018*sum(logreturn2018_american^2))/2
 
-sigmahat2018<-sqrt(1/T2018*sum(logreturn2018_american^2))
+ahat<-1/n*log(SP500_2018_american[[length(SP500_2018_american)]]/SP500_2018_american[[1]])
+bhat<-1/n*sum((logreturn2018_american-ahat)^2)*dt
+sigmahat2018_<-sqrt(bhat)/dt
+muhat2018<-1/2*sigmahat2018^2+ahat/dt
 
 #vi finder priserne for optionerne hvis man købte dem i dag
 american_options<-getOptionChain("SPY",src="yahoo", NULL)
@@ -73,15 +44,15 @@ strike4_put<-american_options$sep.20.2019$puts$Strike
 
 
 #Black scholes price of S&P 500 index
-BS_prices_american<-Black_Scholes_callprice(T=T2018,SP500close_american[[length(SP500close_american)]],strike,muhat2018,sigmahat2018,q=0.0167)
-BS2<-Black_Scholes_callprice(T=T2018,SP500close_american[[length(SP500close_american)]],strike2,muhat2018,sigmahat2018,q=0.0167)
-BS3<-Black_Scholes_callprice(T=T2018,SP500close_american[[length(SP500close_american)]],strike3,muhat2018,sigmahat2018,q=0.0167)
-BS4<-Black_Scholes_callprice(T=T2018,SP500close_american[[length(SP500close_american)]],strike4,muhat2018,sigmahat2018,q=0.0167)
+BS_prices_american<-Black_Scholes_callprice(T=T2018,SP500_2018_american[[length(SP500_2018_american)]],strike,muhat2018,sigmahat2018,q=0.0167)
+BS2<-Black_Scholes_callprice(T=T2018,SP500_2018_american[[length(SP500_2018_american)]],strike2,muhat2018,sigmahat2018,q=0.0167)
+BS3<-Black_Scholes_callprice(T=T2018,SP500_2018_american[[length(SP500_2018_american)]],strike3,muhat2018,sigmahat2018,q=0.0167)
+BS4<-Black_Scholes_callprice(T=T2018,SP500_2018_american[[length(SP500_2018_american)]],strike4,muhat2018,sigmahat2018,q=0.0167)
 
-BS_put_american<-Black_Scholes_putprices(T=T2018,SP500close_american[[length(SP500close_american)]],strike_put,muhat2018,sigmahat2018,q=0.0167)
-BS2_put<-Black_Scholes_putprices(T=T2018,SP500close_american[[length(SP500close_american)]],strike2_put,muhat2018,sigmahat2018,q=0.0167)
-BS3_put<-Black_Scholes_putprices(T=T2018,SP500close_american[[length(SP500close_american)]],strike3_put,muhat2018,sigmahat2018,q=0.0167)
-BS4_put<-Black_Scholes_putprices(T=T2018,SP500close_american[[length(SP500close_american)]],strike4_put,muhat2018,sigmahat2018,q=0.0167)
+BS_put_american<-Black_Scholes_putprices(T=T2018,SP500_2018_american[[length(SP500_2018_american)]],strike_put,muhat2018,sigmahat2018,q=0.0167)
+BS2_put<-Black_Scholes_putprices(T=T2018,SP500_2018_american[[length(SP500_2018_american)]],strike2_put,muhat2018,sigmahat2018,q=0.0167)
+BS3_put<-Black_Scholes_putprices(T=T2018,SP500_2018_american[[length(SP500_2018_american)]],strike3_put,muhat2018,sigmahat2018,q=0.0167)
+BS4_put<-Black_Scholes_putprices(T=T2018,SP500_2018_american[[length(SP500_2018_american)]],strike4_put,muhat2018,sigmahat2018,q=0.0167)
 
 #plots af forskel i priser
 
