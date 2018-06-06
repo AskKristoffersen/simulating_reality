@@ -1,71 +1,140 @@
 library(quantmod)
 library(ggplot2)
-
 library(reshape2)
-#Henter S&P 100
+require(gridExtra)
+#henter data
 getSymbols("^OEX",src="yahoo")
-OEX
-head(OEX)
-tail(OEX)
-qplot(OEX[,4])#Histogram OEX close
 
-
-# Plot af closing prices
-plot(1:dim(OEXclose)[1], OEXclose, type = "l", xlab = "Observations")
-#3.8
 OEXclose<-OEX$OEX.Close
 
-
+#finder logreturn
 logreturn<-c(NA,length(OEXclose))
-si<-c(NA,length(OEXclose))
-si1<-c(NA,length(OEXclose))
 for (i in 2:length(OEXclose)){
   logreturn[i-1]<-log(OEXclose[[i]]/OEXclose[[i-1]])
-  si[i]<-OEXclose[[i]]
-  si1[i]<-OEXclose[[i-1]]
 }
 
+# tjekker normalfordelings antagelser ved histogram
+hist(logreturn, breaks=30)
+x <- logreturn 
+h<-hist(x, breaks=100, col="red", xlab="Log-afkast", ylab = "Frekvens", 
+        main="Histogram med tæthed") 
+xfit<-seq(min(x),max(x),length=40) 
+yfit<-dnorm(xfit,mean=mean(x),sd=sd(x)) 
+yfit <- yfit*diff(h$mids[1:2])*length(x) 
+lines(xfit, yfit, col="blue", lwd=2)
+
+#laver qqplot
+qqnorm(logreturn);qqline(logreturn)
+
+#Plot af closing prices
+plot(1:dim(OEXclose)[1], OEXclose, type = "l", xlab = "Observations",ylab = "Closing prices", main = "Plot af aktiepriserne fra 2007")
+#3.8
+
+#finder logreturn
+logreturn<-c(NA,length(OEXclose))
+for (i in 2:length(OEXclose)){
+  logreturn[i-1] <- log(OEXclose[[i]]/OEXclose[[i-1]])
+}
+
+#finder teoretiske muhat og sigmahat
 n<-length(logreturn)
-T<-n/252
-sum(logreturn)
-muhat<-log(OEXclose[[length(OEXclose)]]/OEXclose[[1]])/T+(1/T*sum(logreturn^2))/2
-muhat
-mean(logreturn)
-sigmahat<-sqrt(1/11*sum(logreturn^2))
-sigmahat
+T<-n/250
 
+#Finder muhat og sigmahat
+ahat<-1/n*log(OEXclose[[n]]/OEXclose[[1]])
+bhat<-1/n*sum((logreturn-ahat)^2)*dt
+sigmahat<-sqrt(bhat)/dt
+muhat<-1/2*sigmahat^2+ahat/dt
+#optimerer med loglikelihood
+si<-c(NA,length(OEXclose)-1)
+si1<-c(NA,length(OEXclose)-1)
 
-
-u<-c(NA,length(OEXclose))
-si<-c(NA,length(OEXclose))
-sit<-c(NA,length(OEXclose))
-
-for (i in 2:length(OEX[,4])) {
-  u[i-1] <- log(OEX[[i,4]]/OEX[[i-1,4]])
-  si[i] <- OEX[[i-1,4]]
-  sit[i] <- OEX[[i,4]]
+for (i in 1:(length(OEXclose)-1)){
+  si[i]<-OEXclose[[i+1]]
+  si1[i]<-OEXclose[[i]]
 }
 
-for (i in 2:length(OEXclose)){
-  logreturn[i-1]<-log(OEXclose[[i]]/OEXclose[[i-1]])
-  si[i]<-OEXclose[[i]]
-  si1[i]<-OEXclose[[i-1]]
-}
 
-dt<-1/251
+dt<-1/250
 n<-length(OEXclose)
 
-loglike <- function(pars, si. = si, sit. = sit) {
+
+loglike <- function(pars, si. = si, si1. = si1) {
   mu <- pars[1]
   sigma2 <- pars[2]^2
-  val.log.like <- n/2*log(2*pi) + n/2*log(sigma2*dt) + 1/(2*sigma2*dt) * sum((log(sit./si.)-(mu-sigma2/2)*dt)^2)
+  val.log.like <- n/2*log(2*pi)+n/2*log(sigma2*dt)+1/(2*sigma2*dt)*sum((log(si./si1.)-(mu - 1/2*sigma2)*dt)^2)
   return(val.log.like)
 }
-opti <- optim( c(0.1, 0.5), loglike)
-pti
-opti <- optim( c(0.1, 0.5),loglike)
 
-optim(c(0,1,0,5),loglike)
-?optim
-loglike(c(-15,-10))
+
+opti<-optim(c(0.1,0.5),loglike)
+
+muhat_loglike<-opti$par[1]
+sigmahat_loglike<-opti$par[2]
+
+muhat
+muhat_loglike
+
+sigmahat
+sigmahat_loglike
+
+
+#Fra 2010-2018
+getSymbols("^OEX",src="yahoo", from="2010-01-04")
+
+OEXclose<-OEX$OEX.Close
+
+# Plot af closing prices
+plot(1:dim(OEXclose)[1], OEXclose, type = "l", xlab = "Observations",ylab = "Closing prices", main = "Plot af aktiepriserne fra 2010")
+
+logreturn_2010<-c(NA,length(OEXclose))
+for (i in 2:length(OEXclose)){
+  logreturn_2010[i-1]<-log(OEXclose[[i]]/OEXclose[[i-1]])
+}
+
+#finder teoretiske muhat og sigmahat
+n<-length(logreturn_2010)
+T<-n/250
+
+#Finder muhat og sigmahat for 2010 og frem
+ahat_2010<-1/n*log(OEXclose[[n]]/OEXclose[[1]])
+bhat_2010<-1/n*sum((logreturn_2010-ahat_2010)^2)*dt
+sigmahat_2010<-sqrt(bhat_2010)/dt
+muhat_2010<-1/2*sigmahat_2010^2+ahat_2010/dt
+
+#optimerer med loglikelihood
+si<-c(NA,length(OEXclose)-1)
+si1<-c(NA,length(OEXclose)-1)
+
+for (i in 1:(length(OEXclose)-1)){
+  si[i]<-OEXclose[[i+1]]
+  si1[i]<-OEXclose[[i]]
+}
+
+
+dt<-1/250
+n<-length(OEXclose)
+
+
+loglike <- function(pars, si. = si, si1. = si1) {
+  mu <- pars[1]
+  sigma2 <- pars[2]^2
+  val.log.like <- n/2*log(2*pi)+n/2*log(sigma2*dt)+1/(2*sigma2*dt)*sum((log(si./si1.)-(mu - 1/2*sigma2)*dt)^2)
+  return(val.log.like)
+}
+
+
+opti_2010<-optim(c(0.1,0.5),loglike)
+
+muhat_loglike_2010<-opti_2010$par[1]
+sigmahat_loglike_2010<-opti_2010$par[2]
+
+muhat_2010
+muhat_loglike_2010
+
+sigmahat_2010
+sigmahat_loglike_2010
+
+
+
 

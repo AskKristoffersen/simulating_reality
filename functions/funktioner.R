@@ -145,3 +145,30 @@ Method2_AV <- function(x0, mu, sigma, n_sim, time_vector,dt) {
   
 }
 
+# funktion til udregning af implied volatilitet
+implied.vol <-
+  function(s0, K, T, r, price){
+    sigma <- 0.20
+    sigma.up <- 10
+    sigma.down <- 0.001
+    count <- 0
+    err <- Black_Scholes_callprice(T,s0,K,r,sigma,q=0) - price
+    while(abs(err) > 0.00001 && count<1000){
+      if(err < 0){
+        sigma.down <- sigma
+        sigma <- (sigma.up + sigma)/2
+      }else{
+        sigma.up <- sigma
+        sigma <- (sigma.down + sigma)/2
+      }
+      err <- Black_Scholes_callprice(T,s0,K,r,sigma,q=0) - price
+      count <- count + 1
+    }
+    
+    if(count==1000){
+      return(NA)
+    }else{
+      return(sigma)
+    }
+  }
+

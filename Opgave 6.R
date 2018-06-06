@@ -21,7 +21,7 @@ T <- 10    # total time
 m <- 120   # subintervals
 dt <- T/m 
   
-
+# opgave 6.2
 
 Assets<-function(dt=1/12,s0=100,r0=0.01,A0=1000,a=0.15,b=0.042,lambda=-0.23,sigma_r=0.01,rho=-0.15,mu=0.09,sigma=0.2, weights,n=1000){
   B <- (1 / a) * (1 - exp(-a * 1:10))
@@ -157,10 +157,10 @@ asset_dist <- data.frame(year = factor(rep(c("1","3","6","10"), each=n)),
                          value = c(A[13,], A[37,], A[73,], A[121,]))
 ggplot(asset_dist, aes(x=value, fill=year)) + geom_density(alpha=.3)+ggtitle("Fodelingsplot med 90% obligationer og 10% aktier")
 
+
+
 # Opgave 6.4
-
 n<-1000
-
 premium<-1000
 q<-0.025
 
@@ -219,7 +219,9 @@ probality_bonds[11]<-sum(A[121,]<L(10))/n
 
 Aktieandel<-seq(0,100,10)
 qplot(Aktieandel,probality_bonds)+ggtitle("P(A(T)<L(T))")
-#6.6
+
+
+# Opgave 6.6
 
 VasicekZCBprice <- 
 function(r0=0.01, a=0.15, b=0.042, sigma_r=0.01, T=10,t,lambda=-0.23,r){
@@ -228,10 +230,14 @@ function(r0=0.01, a=0.15, b=0.042, sigma_r=0.01, T=10,t,lambda=-0.23,r){
   return(exp(a.vas-b.vas*r))
 }
 
+L<-function(t){
+  Liability<-premium*(1+q)^t
+  return(Liability) 
+}
+L_T<-L(10)
 
 
-
-list<-Assets(weights = c(0,1/10,9/10), A0=1000)
+list<-Assets(weights = c(9/10,1/10,0/10), A0=1000)
 A<-list[[1]]
 r<-list[[2]]
 
@@ -240,7 +246,7 @@ r<-list[[2]]
 B<-matrix(NA,121,n)
 for (j in 0:n-1){
   for (i in 1:121){
-    B[i,j]<-max(A[i,j]-VasicekZCBprice(t=i/12,r=r[i,j])*L_T,0)
+    B[i,j]<-max(A[i,j]-VasicekZCBprice(t=i/12,r=r[i,j])*L(10),0)
   }
 }
 
@@ -278,15 +284,17 @@ for (i in 1:109){
   meanvector_Loss[i]<-mean(Loss[i,])
 }
 
-
+#99.5% quantile
 qs <- apply(Loss, 1, quantile, probs=c(0.005, 0.5, 0.995))
 quantiles<-t(rbind(qs,meanvector_Loss))
 colnames(quantiles)<-c("0.5%","50%", "99.5%","Mean")
 
 SCR<-quantiles[,3]
 
+#Plotter SCR med tiden
 qplot(seq(0,9,dt), SCR)+geom_line()+ggtitle("SCR plot")
 
+# CR funktion
 CR<-matrix(NA,109,n)
 
 for(j in 1:n){
@@ -296,7 +304,7 @@ for(j in 1:n){
 }
 
 
-
+# plotter CR quantile plot
 qs <- apply(CR, 1, quantile, probs=c(0.005, 0.5, 0.995))
 quantiles<-t(qs)
 colnames(quantiles)<-c("0.5%","50%", "99.5%")
@@ -311,6 +319,7 @@ Quantilplot_CR <- ggplot(data_plot_6.6, aes(time, value)) +
 
 Quantilplot_CR+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "99.5%","Mean"))
 
+# finder sandsynligheden for insolvens
 TF<-CR<1
 
 
@@ -331,8 +340,10 @@ for (i in 1:109){
 
 
 
-qplot(time_vector, prob, ylab="Sandynligheden for insolvens")+ggtitle("Sandynligheden for insolvens til tid t")
+qplot(time_vector, prob, ylab="Sandynligheden for insolvens")+ggtitle("Sandynligheden for insolvens")
 
+
+#Opgave 6.7
 #ZCP hedge
 
 A0ny<-1000-VasicekZCBprice(t=0/12,r=r0)*L_T
@@ -360,7 +371,7 @@ for (k in 1:n){
 
 
 
-
+# finder Bonus kapital
 B_ZCB<-matrix(NA,121,n)
 for (j in 1:n){
   for (i in 1:121){
@@ -372,6 +383,8 @@ meanvector_B_ZCB<-rep(NA,121)
 for(i in 1:121){
   meanvector_B_ZCB[i]<-mean(B_ZCB[i,])
 }
+
+#plotter B quantile
 
 qs <- apply(B_ZCB, 1, quantile, probs=c(0.005, 0.5, 0.995))
 quantiles<-t(rbind(qs,meanvector_B_ZCB))
@@ -403,7 +416,7 @@ for (i in 1:109){
   meanvector_Loss_ZCB[i]<-mean(Loss_ZCB[i,])
 }
 
-
+#99.5% quantile af loss
 qs <- apply(Loss_ZCB, 1, quantile, probs=c(0.005, 0.5, 0.995))
 quantiles<-t(rbind(qs,meanvector_Loss_ZCB))
 colnames(quantiles)<-c("0.5%","50%", "99.5%","Mean")
@@ -412,6 +425,7 @@ SCR_ZCB<-quantiles[,3]
 
 qplot(seq(0,9,dt), SCR_ZCB)+geom_line()+ggtitle("SCR plot nulkupon hedge")
 
+#finder CR 
 CR_ZCB<-matrix(NA,109,n)
 
 for(j in 1:n){
@@ -421,7 +435,7 @@ for(j in 1:n){
 }
 
 
-
+#plotter Cr quantile
 qs <- apply(CR_ZCB, 1, quantile, probs=c(0.005, 0.5, 0.995))
 quantiles<-t(qs)
 colnames(quantiles)<-c("0.5%","50%", "99.5%")
@@ -437,8 +451,9 @@ Quantilplot_CR_ZCB <- ggplot(data_plot_CR_ZCB, aes(time, value)) +
 Quantilplot_CR_ZCB+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "99.5%","Mean"))
 
 
+#Opgave 6.8
 #Zero Coupon swap hedge
-
+#simulerer assets for swap
 Assets_swap<-function(dt=1/12,s0=100,r0=0.01,A0=1000,a=0.15,b=0.042,lambda=-0.23,sigma_r=0.01,rho=-0.15,mu=0.09,sigma=0.2, weights=c(0,1/10,9/10),n=1000){
   B <- (1 / a) * (1 - exp(-a * 1:10))
   xij <- rep(1/10,10)
@@ -470,10 +485,10 @@ Assets_swap<-function(dt=1/12,s0=100,r0=0.01,A0=1000,a=0.15,b=0.042,lambda=-0.23
 swap_invest<-Assets_swap()
 r_swap<-swap_invest[[2]]
 Aswap_invest<-swap_invest[[1]]
-betaling<-swap_invest[[3]]
 
 
 
+#finder  værdien af assets
 Nyassets_swap<-matrix(NA,121,n)
 for(k in 1:n){
   for(i in 1:121){
@@ -481,7 +496,7 @@ for(k in 1:n){
   }
 }
 
-
+#finder Bonus kapital
 B_swap<-matrix(NA,121,n)
 for (j in 1:n){
   for (i in 1:121){
@@ -494,6 +509,7 @@ for(i in 1:121){
   meanvector_B_swap[i]<-mean(B_swap[i,])
 }
 
+#plotter fraktil for B
 qs <- apply(B_swap, 1, quantile, probs=c(0.005, 0.5, 0.995))
 quantiles<-t(rbind(qs,meanvector_B_swap))
 colnames(quantiles)<-c("0.5%","50%", "99.5%","Mean")
@@ -505,7 +521,7 @@ data_plot_swap<- melt(data_plot_swap,  id = c('time'))
 
 Quantilplot_B_swap <- ggplot(data_plot_swap, aes(time, value)) +
   geom_line(aes(colour = variable)) +
-  ggtitle("Quantile plot B_swap ")
+  ggtitle("Fraktilplot for bonus kapitalen ved swap ")
 
 Quantilplot_B_swap+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "99.5%","Mean"))
 
@@ -524,7 +540,7 @@ for (i in 1:109){
   meanvector_Loss_swap[i]<-mean(Loss_swap[i,])
 }
 
-
+#99.5% quantile af loss
 qs <- apply(Loss_swap, 1, quantile, probs=c(0.005, 0.5, 0.995))
 quantiles<-t(rbind(qs,meanvector_Loss_swap))
 colnames(quantiles)<-c("0.5%","50%", "99.5%","Mean")
@@ -533,6 +549,8 @@ SCR_swap<-quantiles[,3]
 
 qplot(seq(0,9,dt), SCR_swap)+geom_line()+ggtitle("SCR plot nulkupon swap hedge")
 
+
+#finder CR
 CR_swap<-matrix(NA,109,n)
 
 for(j in 1:n){
@@ -542,7 +560,7 @@ for(j in 1:n){
 }
 
 
-
+#plotter CR
 qs <- apply(CR_swap, 1, quantile, probs=c(0.005, 0.5, 0.995))
 quantiles<-t(qs)
 colnames(quantiles)<-c("0.5%","50%", "99.5%")
@@ -553,10 +571,11 @@ data_plot_CR_swap<- melt(data_plot_CR_swap,  id = c('time'))
 
 Quantilplot_CR_swap <- ggplot(data_plot_CR_swap, aes(time, value)) +
   geom_line(aes(colour = variable)) +
-  ggtitle("Quantile plot CR ZCB  swap ")
+  ggtitle("Fraktilplot CR nulkupon swap ")
 
 Quantilplot_CR_swap+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "99.5%","Mean"))
-#sandsynlighedsplot
+
+#finder sandsynligheden for insolvens
 TF_swap<-CR_swap<1
 
 
@@ -575,10 +594,10 @@ for (i in 1:109){
 }
 
 
-qplot(time_vector, prob_swap, ylab ="sandsynlighed for insolvens")+ggtitle("Sandsynlighedsplot")
+qplot(time_vector, prob_swap, ylab ="sandsynlighed for insolvens")+ggtitle("Sandsynlighed for insolvens ved swap")
 
-#6.9
-
+#opgave 6.9
+#simuler Assets under Q målet
 Assets_underQ<-function(dt=1/12,s0=100,r0=0.01,A0=1000,a=0.15,b=0.042,lambda=-0.23,sigma_r=0.01,rho=-0.15,mu=0.09,sigma=0.2, weights,n=1000){
   B <- (1 / a) * (1 - exp(-a * 1:10))
   xij <- rep(1/10,10)
@@ -605,13 +624,15 @@ Assets_underQ<-function(dt=1/12,s0=100,r0=0.01,A0=1000,a=0.15,b=0.042,lambda=-0.
 
 list<-Assets_underQ(weights = c(0,1/10,9/10))
 AQ<-list[[1]]
+#finder værdien af bonusoptionen ved garanteret ydelse
 bonusoption<-rep(NA,1000)
 for (i in 1:1000){
   bonusoption[i]<-max(AQ[121,i]-L(10),0)
 }
+#finder ydelsen ved at diskontere tilbage
 ydelse<-VasicekZCBprice(t=0,r=r0)*mean(bonusoption)
 
-
+# findeer fair pris ved Garanteret rente
 L<-function(t){
   Liability<-premium*(1+q)^t
   return(Liability) 
@@ -627,9 +648,11 @@ meanbonus<-rep(NA,10)
 for (i in 1:10){
   meanbonus[i]<-mean(bonusoptions2[,i])
 }
+# diskonterer tilbage og finder den samlede værdi af bonus optionerne
 diskon<-VasicekZCBprice(t=1,r=r0)*meanbonus
 sum(diskon)
-# finder eta
+
+#Opgave 6.10 finder eta
 
 bisect(function(eta){return(VasicekZCBprice(t=0,r=r0)*(L(10)+eta*(mean(bonusoption)))-1000)},0,1)
 
