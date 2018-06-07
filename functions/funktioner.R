@@ -172,3 +172,43 @@ implied.vol <-
     }
   }
 
+
+#simulation af assets
+Assets<-function(dt=1/12,s0=100,r0=0.01,A0=1000,a=0.15,b=0.042,lambda=-0.23,sigma_r=0.01,rho=-0.15,mu=0.09,sigma=0.2, weights,n=1000){
+  B <- (1 / a) * (1 - exp(-a * 1:10))
+  xij <- rep(1/10,10)
+  
+  A <- matrix(NA,m+1,n)  
+  A[1,] <- A0
+  
+  r <- matrix(0,m+1,n)  
+  r[1,] <- r0
+  
+  for(j in 1:n){
+    for(i in 2:121){
+      dw1<-rnorm(n=121,mean=0,sd=1)
+      dw3<-rho*dw1+sqrt(1-rho^2)*rnorm(n=121,mean=0,sd=1)
+      dr <- a*(b-r[i-1,j])*dt + sigma_r*sqrt(dt)*dw1[i-1]
+      r[i,j] <- r[i-1,j] + dr
+      dA <-A[i-1,j]* (weights[1] *r[i-1,j]  * dt + weights[2] *(mu*dt+sigma*sqrt(dt)*dw3[i-1]) + 
+                        sum(xij * weights[3] * ((r[i-1,j] - lambda * sigma_r * B) * dt - sigma_r * B *sqrt(dt)* dw1[i-1])))
+      A[i,j] <- A[i-1,j] + dA
+    }
+  } 
+  return(list(A,r))
+}
+
+#liabilities
+L<-function(t){
+  Liability<-premium*(1+q)^t
+  return(Liability) 
+}
+
+#nulkupon priser
+
+VasicekZCBprice <- 
+  function(r0=0.01, a=0.15, b=0.042, sigma_r=0.01, T=10,t,lambda=-0.23,r){
+    b.vas <- (1/a)*(1-exp(-(T-t)*a)) 
+    a.vas <- (sigma_r^2/(2*a^2)-b+(lambda*sigma_r)/a)*((T-t)-b.vas)-sigma_r^2/(4*a)*b.vas^2
+    return(exp(a.vas-b.vas*r))
+  }

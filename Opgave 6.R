@@ -2,6 +2,7 @@ library(reshape2)
 library(ggplot2)
 require(gridExtra)
 library(pracma)
+source("functions/funktioner.R")
 # simulerer assets
 
 #Model parameter der skal være loaded i hele r filen, med mindre de bliver ændret undervejs
@@ -15,12 +16,15 @@ rho<- -0.15
 mu<-0.107
 sigma<-0.145
 A0<-1000
+premium<-1000
+q<-0.025
 
 n <- 10    # MC simulation trials
 T <- 10    # total time
 m <- 120   # subintervals
 dt <- T/m 
-  
+
+L_T<-L(10)
 # opgave 6.2
 
 Assets<-function(dt=1/12,s0=100,r0=0.01,A0=1000,a=0.15,b=0.042,lambda=-0.23,sigma_r=0.01,rho=-0.15,mu=0.09,sigma=0.2, weights,n=1000){
@@ -634,10 +638,6 @@ for (i in 1:1000){
 ydelse<-VasicekZCBprice(t=0,r=r0)*mean(bonusoption)
 
 # findeer fair pris ved Garanteret rente
-L<-function(t){
-  Liability<-premium*(1+q)^t
-  return(Liability) 
-}
 
 bonusoptions2<-matrix(NA,1000,10)
 for (k in 1:1000){
