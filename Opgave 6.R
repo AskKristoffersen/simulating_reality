@@ -4,7 +4,7 @@ require(gridExtra)
 library(pracma)
 # simulerer assets
 
-#Model parameter
+#Model parameter der skal være loaded i hele r filen, med mindre de bliver ændret undervejs
 s0<- 100
 r0<- 0.01
 a<- 0.15
@@ -454,6 +454,7 @@ Quantilplot_CR_ZCB+scale_color_hue(name = "Quantiles",labels = c("0.5%","50%", "
 #Opgave 6.8
 #Zero Coupon swap hedge
 #simulerer assets for swap
+n<-1000
 Assets_swap<-function(dt=1/12,s0=100,r0=0.01,A0=1000,a=0.15,b=0.042,lambda=-0.23,sigma_r=0.01,rho=-0.15,mu=0.09,sigma=0.2, weights=c(0,1/10,9/10),n=1000){
   B <- (1 / a) * (1 - exp(-a * 1:10))
   xij <- rep(1/10,10)
@@ -465,7 +466,7 @@ Assets_swap<-function(dt=1/12,s0=100,r0=0.01,A0=1000,a=0.15,b=0.042,lambda=-0.23
   r[1,] <- r0
   
   betaling<-matrix(0,m+1,n)
-  betaling[1,]<-VasicekZCBprice(t=1/12,r=r0)*L_T*r0*dt
+  betaling[1,]<-VasicekZCBprice(t=1/12,r=r0)*L(10)*r0*dt
   
   
   for(j in 1:n){
@@ -476,7 +477,7 @@ Assets_swap<-function(dt=1/12,s0=100,r0=0.01,A0=1000,a=0.15,b=0.042,lambda=-0.23
       r[i,j] <- r[i-1,j] + dr
       dA <-A[i-1,j]* (weights[1] *r[i-1,j]  * dt + weights[2] *(mu*dt+sigma*sqrt(dt)*dw3[i-1]) + 
                         sum(xij * weights[3] * ((r[i-1,j] - lambda * sigma_r * B) * dt - sigma_r * B *sqrt(dt)* dw1[i-1])))
-      betaling[i,j]<-VasicekZCBprice(t=1/12,r=r0)*L_T*r[i-1,j]*dt
+      betaling[i,j]<-VasicekZCBprice(t=1/12,r=r0)*L(10)*r[i-1,j]*dt
       A[i,j] <- A[i-1,j] + dA - betaling[i,j]
     }
   } 
@@ -586,7 +587,7 @@ for (k in 1:n){
     }
   }
 }
-TF[,1]
+
 prob_swap<-rep(NA,109)
 prob_swap[1]<-0
 for (i in 1:109){

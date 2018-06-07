@@ -2,7 +2,7 @@ library(reshape2)
 library(ggplot2)
 require(gridExtra)
 library(quantmod)
-source("functions/funktioner")
+source("functions/funktioner.R")
 #parametre
 x0 <- 100
 mu <- 0.02
